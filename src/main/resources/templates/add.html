@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加联系人</title>
+    <!-- 自定义css文件引入 -->
+    <link rel="stylesheet" th:href="mystyle.css" href="../static/mystyle.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+</head>
+<body>
+<div class="wrapper">
+    <form th:action="@{/api/add}" class="form-signin" onsubmit="return validateForm()" th:object="${user}" method="post">
+        <h2 class="form-signin-heading text-center">
+            Login
+        </h2>
+        <label for="name">姓名</label>
+        <input id="name" type="text" class="form-control" name="name" placeholder="Name" th:field="*{name}" required="" autofocus>
+        <label for="phoneNumber">电话</label>
+        <input id="phoneNumber" type="text" class="form-control" name="phoneNumber" placeholder="Phone Number" th:field="*{phone}" required="">
+        <label for="email">邮箱</label>
+        <input id="email" type="text" class="form-control" name="email" placeholder="Email" th:field="*{email}" required="">
+        <label for="address">电话</label>
+        <input id="address" type="text" class="form-control" name="address" placeholder="Address" th:field="*{address}" required="">
+        <label for="QQNumber">QQ号</label>
+        <input id="QQNumber" type="text" class="form-control" name="QQNumber" placeholder="QQ Number" th:field="*{qq}" required="">
+        <input class="btn btn-lg btn-primary btn-block" type="submit" value="Submit">
+    </form>
+</div>
+</body>
+<script>
+    function validateForm() {
+        var result = true;
+        var Email = document.getElementById("email");
+        var phoneNumber = document.getElementById("phoneNumber");
+        var QQNumber = document.getElementById("QQNumber");
+        var reg1 = /^\w+((.\w+)|(-\w+))@[A-Za-z0-9]+((.|-)[A-Za-z0-9]+).[A-Za-z0-9]+$/;
+        var reg2 = /^[0-9]*]*$/;
+        if(!reg1.test(Email.value)) {
+            alert("请输入正确的邮箱格式！");
+            Email.value = "";
+            result = false;
+        }
+        if(!reg2.test(phoneNumber.value)) {
+            console.log(phoneNumber.value)
+            alert("电话号码只能为数字！");
+            phoneNumber.value = "";
+            result = false;
+        }
+        if(!reg2.test(QQNumber.value)) {
+            alert("QQ号只能为数字！");
+            QQNumber.value = "";
+            result = false;
+        }
+        return result;
+    }
+</script>
+</body>
+</html>

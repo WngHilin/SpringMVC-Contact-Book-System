@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>通讯录</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- 自定义css文件引入 -->
+    <link rel="stylesheet" th:href="mystyle.css" href="../static/mystyle.css">
+</head>
+<body>
+<div class="sheet table-box col-md-8 col-md-offset-2">
+    <a th:href="@{/add}" class="btn table-btn btn-success active" role="button">添加</a>
+    <table border="1" class="table table-hover table-bordered">
+        <tr>
+            <th>姓名</th>
+            <th>电话</th>
+            <th>邮箱</th>
+            <th>QQ</th>
+            <th>住址</th>
+            <th>操作</th>
+        </tr>
+        <tr th:each="contact:${user}">
+            <td th:text="${contact.name}"></td>
+            <td th:text="${contact.phone}"></td>
+            <td th:text="${contact.email}"></td>
+            <td th:text="${contact.qq}"></td>
+            <td th:text="${contact.address}"></td>
+            <td>
+                <form th:action="@{'/api/delete/' + ${contact.id}}" method="post">
+                    <a th:href="@{'/update/' + ${contact.id}}" class="btn table-btn btn-primary active" role="button">编辑</a>
+                    <input type="submit" class="btn table-btn btn-danger active" role="button" value="删除">
+                </form>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
