@@ -1,97 +1,122 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.Contact;
+import com.example.demo.dao.ContactRepository;
+import com.example.demo.entity.Contact;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.net.http.HttpResponse;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
-@Controller
+@RestController
 public class MyController   {
-    private List<Contact> contactList = new ArrayList<>();
-    private int id = 0;
+    //private List<Contact> contactList = new ArrayList<>();
+    private ContactRepository contactRepository;
+
+    @Autowired
+    public void setContactRepository(ContactRepository contactRepository) {
+        this.contactRepository = contactRepository ;
+    }
 
     @RequestMapping("/login")
-    String loginView(Model model) {
-        return "login";
+    ModelAndView loginView(Model model) {
+        ModelAndView modelAndView = new ModelAndView("login", "userModel", model);
+        return modelAndView;
     }
 
     @RequestMapping("/list")
     ModelAndView indexView(Model model) {
-        model.addAttribute("user", contactList);
         ModelAndView modelAndView = new ModelAndView("addressbook", "userModel", model);
         return modelAndView;
     }
 
-    @RequestMapping("/add")
-    ModelAndView addView(Model model) {
-        model.addAttribute("user", new Contact());
-        ModelAndView modelAndView = new ModelAndView("add", "userModel", model);
-        return modelAndView;
-    }
-
-    @RequestMapping("/update/{id}")
-    String updateView(@ModelAttribute("user")Contact user, @PathVariable("id") int id, Model model) {
-        return "update";
+    @GetMapping("/api/list")
+    List<Contact> list(HttpSession session) {
+        List<Contact> contacts = (List<Contact>)contactRepository.findAll();
+        if(contacts == null) {
+            contacts = new ArrayList<Contact>();
+        }
+        return contacts;
     }
 
     @PostMapping("/api/login")
-    String Login(HttpServletRequest request, HttpServletResponse response,
+    void Login(HttpServletRequest request, HttpServletResponse response,
                  @RequestParam("username") String username,
-                 @RequestParam("password") String password)
-    {
+                 @RequestParam("password") String password) throws IOException {
         if(username.equals("12345678") && password.equals("12345678")) {
             HttpSession session = request.getSession();
             session.setAttribute("User", "12345678");
-            return "redirect:/list";
+            response.sendRedirect("/list");
+            return;
         }
-
-        return "redirect:/login";
+        response.sendRedirect("/login");
     }
 
     @PostMapping("/api/add")
-    String add(Contact contact) {
-        contactList.add(contact);
-        System.out.println(contact.getId());
-        return "redirect:/list";
+    String add(@RequestParam String name, @RequestParam String phoneNumber, @RequestParam String email,
+               @RequestParam String address, @RequestParam String QQNumber) {
+        Contact contact = new Contact(name, phoneNumber, email, QQNumber, address);
+        contactRepository.save(contact);
+        return "success";
     }
 
-    @PostMapping("/api/update/{id}")
-    String update(@ModelAttribute("user") Contact contact, @PathVariable("id") int id, Model model) {
-        Iterator<Contact> iter = contactList.iterator();
+    @PostMapping("/api/edit")
+    String edit(@RequestParam String name, @RequestParam String phoneNumber, @RequestParam String email,
+                @RequestParam String address, @RequestParam String QQNumber, @RequestParam Long contactId) {
+        List<Contact> contacts = (List<Contact>)contactRepository.findAll();
+        if(contacts != null) {
+            Contact contact = contacts.get(contactId.intValue() - 1);
+            contact.setName(name);
+            contact.setPhone(phoneNumber);
+            contact.setEmail(email);
+            contact.setQq(QQNumber);
+            contact.setAddress(address);
 
-        while(iter.hasNext()) {
-            Contact tmp = iter.next();
-            if(tmp.getId() == id) {
-                Collections.replaceAll(contactList, tmp, contact);
-            }
+            contactRepository.save(contact);
+            return "success";
         }
-        return "redirect:/list";
+        else {
+            return "failure";
+        }
     }
 
-    @PostMapping("/api/delete/{id}")
-    String delete(@PathVariable("id") int id)
-    {
-        Iterator<Contact> iter = contactList.iterator();
-        while(iter.hasNext()) {
-            Contact tmp = iter.next();
-            if(tmp.getId() == id)
-            {
-                iter.remove();
-                System.out.println("删除成功！");
+    @DeleteMapping("/api/delete")
+    String delete(@RequestParam Long contactId) {
+        System.out.println("Delete: " + contactId);
+        List<Contact> contacts = (List<Contact>)contactRepository.findAll();
+        Contact contactToDelete = contacts.get(contactId.intValue() - 1);
+        contactRepository.deleteById(contactToDelete.getId());
+
+        return "success";
+    }
+
+    @PostMapping("/api/phone")
+    String checkPhone(@RequestParam int id, @RequestParam String phoneNumber) {
+        System.out.println("Phone Number: " + phoneNumber);
+
+        List<Contact> contacts = (List<Contact>) contactRepository.findAll();
+        boolean find = false;
+        for(int i = 0; i < contacts.size(); i++) {
+            Contact item = contacts.get(i);
+            if(phoneNumber.equals(item.getPhone()) && i != (id - 1)) {
+                find = true;
                 break;
             }
         }
-        return "redirect:/list";
+
+        if(find) {
+            return "error";
+        } else {
+            return "success";
+        }
     }
 }

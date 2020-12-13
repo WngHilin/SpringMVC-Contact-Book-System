@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>通讯录</title>
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="mystyle.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-    <!-- 自定义css文件引入 -->
-    <link rel="stylesheet" th:href="mystyle.css" href="../static/mystyle.css">
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 </head>
 <body>
 <div class="sheet table-box col-md-8 col-md-offset-2">
-    <a th:href="@{/add}" class="btn table-btn btn-success active" role="button">添加</a>
-    <table border="1" class="table table-hover table-bordered">
+    <a id="btnAdd" class="btn table-btn btn-success active" role="button">添加</a>
+    <table id="contactTable" border="1" class="table table-hover table-bordered">
+        <thead>
         <tr>
+            <th>序号</th>
             <th>姓名</th>
             <th>电话</th>
             <th>邮箱</th>
@@ -20,7 +24,10 @@
             <th>住址</th>
             <th>操作</th>
         </tr>
-        <tr th:each="contact:${user}">
+        </thead>
+        <tbody>
+        </tbody>
+        <!--<tr th:each="contact:${user}">
             <td th:text="${contact.name}"></td>
             <td th:text="${contact.phone}"></td>
             <td th:text="${contact.email}"></td>
@@ -28,12 +35,210 @@
             <td th:text="${contact.address}"></td>
             <td>
                 <form th:action="@{'/api/delete/' + ${contact.id}}" method="post">
-                    <a th:href="@{'/update/' + ${contact.id}}" class="btn table-btn btn-primary active" role="button">编辑</a>
-                    <input type="submit" class="btn table-btn btn-danger active" role="button" value="删除">
+                    <a th:href="@{'/update/' + ${contact.id}}" class="btn-edit btn table-btn btn-primary active" role="button">编辑</a>
+                    <input type="submit" class="btn-delete btn table-btn btn-danger active" role="button" value="删除">
                 </form>
             </td>
-        </tr>
+        </tr>-->
     </table>
 </div>
+
+<!--模态框-->
+<!-- 模态框 -->
+<div class="modal fade" id="modal_form">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- 模态框头部 -->
+            <div class="modal-header">
+                <h4 class="modal-title">Add Contact</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <!-- 模态框主体 -->
+            <div class="modal-body">
+                <form id="form" action="#" class="form-signin" method="post">
+                    <input id="contactId" type="hidden" value="" name="contactId">
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label for="name">姓名</label>
+                            <input id="name" type="text" class="form-control" name="name" placeholder="Name" required="" autofocus>
+                            <label for="phoneNumber">电话</label>
+                            <input id="phoneNumber" type="text" class="form-control" name="phoneNumber" placeholder="Phone Number" required="">
+                            <label for="email">邮箱</label>
+                            <input id="email" type="text" class="form-control" name="email" placeholder="Email" required="">
+                            <label for="address">地址</label>
+                            <input id="address" type="text" class="form-control" name="address" placeholder="Address" required="">
+                            <label for="QQNumber">QQ号</label>
+                            <input id="QQNumber" type="text" class="form-control" name="QQNumber" placeholder="QQ Number" required="">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- 模态框底部 -->
+            <div class="modal-footer">
+                <input id="btnSave" class="btn btn-primary" type="submit" value="Save">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function validateForm() {
+        var result = true;
+        var Email = document.getElementById("email");
+        var phoneNumber = document.getElementById("phoneNumber");
+        var QQNumber = document.getElementById("QQNumber");
+        var reg1 = /^\w+((.\w+)|(-\w+))@[A-Za-z0-9]+((.|-)[A-Za-z0-9]+).[A-Za-z0-9]+$/;
+        var reg2 = /^[0-9]*]*$/;
+        if(!reg1.test(Email.value)) {
+            alert("请输入正确的邮箱格式！");
+            Email.value = "";
+            result = false;
+        }
+        if(!reg2.test(phoneNumber.value)) {
+            console.log(phoneNumber.value)
+            alert("电话号码只能为数字！");
+            phoneNumber.value = "";
+            result = false;
+        }
+        if(!reg2.test(QQNumber.value)) {
+            alert("QQ号只能为数字！");
+            QQNumber.value = "";
+            result = false;
+        }
+        return result;
+    }
+
+    $(document).ready(
+        $("#btnAdd").click(
+            function() {
+                currentId = -1;
+                save_method = 'add';
+                $('#form')[0].reset();
+                $('#modal_form').modal('show');
+                $('.modal-title').text('Add Contact');
+            }
+        ),
+        $("#btnSave").click(
+            function() {
+                if(validateForm() == false) {
+                    return;
+                }
+                let url;
+                if(save_method == 'add') {
+                    url = '/api/add';
+                }
+                else {
+                    url = '/api/edit';
+                }
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: $('#form').serialize(),
+                    success: function(result) {
+                        $('#modal_form').modal('hide');
+                        reload_table();
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.log($("#form").serialize())
+                        alert('新建或修改错误')
+                    }
+                })
+            }
+        ),
+        // 判断输入的电话号码是否存在
+        $("#phoneNumber").blur(function () {
+            let row = $(this).closest("tr");
+            let phoneNumber = document.getElementById("phoneNumber").value;
+            let data = {
+                "id": currentId,
+                "phoneNumber": phoneNumber
+            };
+            $.ajax({
+                type: 'POST',
+                url: '/api/phone',
+                data: data,
+                async: false,
+                success: function (data) {
+                    console.log(data)
+                    if(data == 'error') {
+                        alert("电话号码重复！")
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+
+                }
+            })
+        }),
+        $('#contactTable').on('click', '.btn-edit', function() {
+            console.log("edit");
+            save_method = 'update';
+            $('#form')[0].reset();
+            var row = $(this).closest("tr");
+            currentId = parseInt(row.find("td:eq(0)").text());
+            $('#contactId').val(row.find("td:eq(0)").text());
+            $('#name').val(row.find("td:eq(1)").text());
+            $('#phoneNumber').val(row.find("td:eq(2)").text());
+            $('#email').val(row.find("td:eq(3)").text());
+            $('#address').val(row.find("td:eq(5)").text());
+            $('#QQNumber').val(row.find("td:eq(4)").text());
+            $('#modal_form').modal('show');
+            $('.modal-title').text('Edit Contact');
+        }),
+
+        $('#contactTable').on('click', '.btn-delete', function() {
+            var row = $(this).closest("tr");
+            $.ajax({
+                url: "/api/delete",
+                type: "DELETE",
+                data: {
+                    "contactId": row.find("td:eq(0)").text()
+                },
+                success: function(data) {
+                    $('#modal_form').modal('hide');
+                    reload_table();
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log(row.find("td:eq(0)").text())
+                    alert("删除错误！");
+                }
+            })
+        }),
+        reload_table()
+    )
+
+    function reload_table() {
+        $.ajax({
+            url: "/api/list",
+            type: "get",
+            dataType: "JSON",
+            success: function (data) {
+                console.log("data: ", data);
+                $("contactTable").children("tbody").empty();
+                var htmlStr = ""
+                for(var i = 0; i < data.length; i++) {
+                    htmlStr = htmlStr + "<tr>" +
+                        "<td class='index'>" + (i + 1) + "</td>" +
+                        "<td>" + data[i].name + "</td>" +
+                        "<td>" + data[i].phone + "</td>" +
+                        "<td>" + data[i].email + "</td>" +
+                        "<td>" + data[i].qq + "</td>" +
+                        "<td>" + data[i].address + "</td>" +
+                        "<td>" +
+                        "<form method='post'>" +
+                        "<a class='btn-edit btn table-btn btn-primary active' role='button'>编辑</a>" +
+                        "<input type='submit' class='btn-delete btn table-btn btn-danger active' role='button' value='删除'>" +
+                        "</form>" +
+                        "</td>"+
+                        "</tr>";
+                }
+                $("#contactTable").children("tbody").html(htmlStr);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('获取数据错误');
+            }
+        })
+    }
+
+</script>
 </body>
 </html>
